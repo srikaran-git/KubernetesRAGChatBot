@@ -1,0 +1,42 @@
+# Data files (large H&M CSVs — articles.csv, transactions.csv, customers.csv)
+data/
+*.csv
+*.tsv
+*.parquet
+images/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.Python
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# Jupyter / Colab
+.ipynb_checkpoints/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# ChromaDB local persistence (if PersistentClient is ever used)
+chroma_db/
+*.sqlite3
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
