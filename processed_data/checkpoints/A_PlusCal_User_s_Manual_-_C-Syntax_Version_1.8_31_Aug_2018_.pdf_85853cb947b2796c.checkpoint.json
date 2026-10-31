@@ -1,0 +1,13 @@
+{
+  "filename": "A PlusCal User's Manual - C-Syntax Version 1.8 (31 Aug 2018).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A PlusCal User's Manual - C-Syntax Version 1.8 (31 Aug 2018).pdf",
+  "content_hash": "69ce7c18c7b261c8e2169e0ef518c4c6bfbdeab255c602bffbeb96dba1844538",
+  "total_chunks": 140,
+  "next_chunk_index": 140,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

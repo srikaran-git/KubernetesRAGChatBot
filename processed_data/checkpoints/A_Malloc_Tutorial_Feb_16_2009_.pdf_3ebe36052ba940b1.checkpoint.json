@@ -1,0 +1,13 @@
+{
+  "filename": "A Malloc Tutorial (Feb 16, 2009).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Malloc Tutorial (Feb 16, 2009).pdf",
+  "content_hash": "ca0bb40c9e5a9026b1c883dd4740e0fbce6a40c62d87bcb636dca74480c932f1",
+  "total_chunks": 34,
+  "next_chunk_index": 34,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

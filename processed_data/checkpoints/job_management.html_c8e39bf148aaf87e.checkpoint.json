@@ -1,0 +1,13 @@
+{
+  "filename": "job_management.html",
+  "source_type": "true",
+  "source_scope": "true:true_data",
+  "source": "true:true_data/job_management.html",
+  "content_hash": "41250ef2b0181eebd56504119d32a9dcbed88ebf7b86e2aed5baed2edee0804e",
+  "total_chunks": 9,
+  "next_chunk_index": 9,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

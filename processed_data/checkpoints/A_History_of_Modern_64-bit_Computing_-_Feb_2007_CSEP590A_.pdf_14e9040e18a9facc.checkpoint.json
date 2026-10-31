@@ -1,0 +1,13 @@
+{
+  "filename": "A History of Modern 64-bit Computing - Feb 2007 (CSEP590A).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A History of Modern 64-bit Computing - Feb 2007 (CSEP590A).pdf",
+  "content_hash": "f1d18eb6193f87f5db469936aa8ca73f546c6c77bb43a79aa2927e70dbb33f93",
+  "total_chunks": 84,
+  "next_chunk_index": 84,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

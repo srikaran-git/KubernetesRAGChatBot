@@ -1,0 +1,13 @@
+{
+  "filename": "A Comparison of Software and Hardware Techniques for x86 Virtualization - Oct 2015 (asplos235_adams).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Comparison of Software and Hardware Techniques for x86 Virtualization - Oct 2015 (asplos235_adams).pdf",
+  "content_hash": "19004530a0bb0f1c11b2b9f78e2f648a75fcdf12cb3b891c9c0f5c721fe6156c",
+  "total_chunks": 72,
+  "next_chunk_index": 72,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

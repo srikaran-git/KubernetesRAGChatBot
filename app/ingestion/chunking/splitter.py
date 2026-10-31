@@ -5,7 +5,7 @@ from typing import List
 import textwrap
 import logfire
 
-def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
+def chunk_text(text: str, chunk_size: int = 1000) -> List[str]:
     with logfire.span("✂️ Text Chunking", text_length=len(text)):
 
         if not text.strip():

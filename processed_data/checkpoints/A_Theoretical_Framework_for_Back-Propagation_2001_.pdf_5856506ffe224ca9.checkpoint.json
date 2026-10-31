@@ -1,0 +1,13 @@
+{
+  "filename": "A Theoretical Framework for Back-Propagation (2001).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Theoretical Framework for Back-Propagation (2001).pdf",
+  "content_hash": "e338a289de3c6d52699e6bcddd999274efc79e1deffcd5a89542672cf8f52300",
+  "total_chunks": 1,
+  "next_chunk_index": 1,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

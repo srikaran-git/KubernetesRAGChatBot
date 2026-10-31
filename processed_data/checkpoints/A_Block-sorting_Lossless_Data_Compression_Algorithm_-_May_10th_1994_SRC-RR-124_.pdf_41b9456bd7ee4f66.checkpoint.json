@@ -1,0 +1,13 @@
+{
+  "filename": "A Block-sorting Lossless Data Compression Algorithm - May 10th, 1994 (SRC-RR-124).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Block-sorting Lossless Data Compression Algorithm - May 10th, 1994 (SRC-RR-124).pdf",
+  "content_hash": "20df8e55a7da82255b1f113635c65810a3eb4e4e2da52ec8866de1286ed4e85d",
+  "total_chunks": 37,
+  "next_chunk_index": 37,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

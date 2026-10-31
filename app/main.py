@@ -4,10 +4,10 @@
 # ============================================================
 import logfire
 import os
-from dotenv import load_dotenv
+from app.config import settings
 
-load_dotenv()
-logfire.configure(token=os.getenv("LOGFIRE_TOKEN"))
+
+logfire.configure(token=settings.LOGFIRE_TOKEN)
 
 # Now safe to import app modules - logfire is already active
 from fastapi import FastAPI, Response

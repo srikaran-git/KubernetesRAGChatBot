@@ -1,0 +1,13 @@
+{
+  "filename": "A Primer on Memory Consistency and Cache Coherence - 2nd Edition.pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Primer on Memory Consistency and Cache Coherence - 2nd Edition.pdf",
+  "content_hash": "44d3d9fa94fd3f49f6d9c07ac8e0bed62df1400a52e6c0dadd9e6bc73ad1bb7a",
+  "total_chunks": 659,
+  "next_chunk_index": 659,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

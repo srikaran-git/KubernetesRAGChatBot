@@ -1,0 +1,13 @@
+{
+  "filename": "cronjobs.docx",
+  "source_type": "true",
+  "source_scope": "true:true_data",
+  "source": "true:true_data/cronjobs.docx",
+  "content_hash": "6db58d2d397a7b1bd34dd180bab39b3a12fcd394253318ffdc75cb3911687b6b",
+  "total_chunks": 45,
+  "next_chunk_index": 45,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

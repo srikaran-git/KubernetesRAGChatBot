@@ -1,0 +1,13 @@
+{
+  "filename": "A Locality-Sensitive Hash for Real Vectors (10.1.1.215.7690).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Locality-Sensitive Hash for Real Vectors (10.1.1.215.7690).pdf",
+  "content_hash": "fabf2f9972509835d453f42f2214ab2f2c02a1bdc2cfeeb7aff9bdaeaffebb71",
+  "total_chunks": 46,
+  "next_chunk_index": 46,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

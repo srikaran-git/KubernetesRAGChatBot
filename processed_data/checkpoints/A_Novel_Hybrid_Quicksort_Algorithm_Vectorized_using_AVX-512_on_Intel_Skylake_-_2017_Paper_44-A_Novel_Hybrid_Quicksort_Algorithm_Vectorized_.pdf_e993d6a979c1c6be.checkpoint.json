@@ -1,0 +1,13 @@
+{
+  "filename": "A Novel Hybrid Quicksort Algorithm Vectorized using AVX-512 on Intel Skylake - 2017 (Paper_44-A_Novel_Hybrid_Quicksort_Algorithm_Vectorized).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Novel Hybrid Quicksort Algorithm Vectorized using AVX-512 on Intel Skylake - 2017 (Paper_44-A_Novel_Hybrid_Quicksort_Algorithm_Vectorized).pdf",
+  "content_hash": "2747358071030c3efb2e3083ee85dc9f8050ee748bb21fa83cb16ee3b01256bc",
+  "total_chunks": 45,
+  "next_chunk_index": 45,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

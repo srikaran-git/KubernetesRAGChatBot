@@ -134,17 +134,17 @@ python -m app.ingestion.processor DATA --wipe
 
 ```powershell
 # Terminal 1 — FastAPI backend
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 
 # Terminal 2 — Streamlit UI
-streamlit run ui/app.py
+python -m streamlit run ui/app.py
 ```
 
 ### 5. Run the eval suite (optional)
 
 ```powershell
 # Requires the FastAPI backend running on :8000
-streamlit run evals/app.py
+python -m streamlit run evals/app.py
 ```
 
 ---

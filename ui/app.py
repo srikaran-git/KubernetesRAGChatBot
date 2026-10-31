@@ -94,7 +94,19 @@ if prompt := st.chat_input("Ask about your documentation..."):
 
                         print(f"Calling: {url}")
 
-                        response = requests.post(url, json=payload, timeout=60)
+                        try:
+                            response = requests.post(url, json=payload, timeout=60)
+                            response.raise_for_status()
+
+                        except requests.exceptions.ConnectionError:
+                            st.error(
+                                "Backend is not running. Start FastAPI on http://127.0.0.1:8000"
+                            )
+                            st.stop()
+
+                        except requests.exceptions.Timeout:
+                            st.error("Backend request timed out.")
+                            st.stop()                       
                 
                         print("Status Code:", response.status_code)
                         print("Response:", response.text)

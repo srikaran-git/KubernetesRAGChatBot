@@ -1,0 +1,13 @@
+{
+  "filename": "A Case Study in Optimizing HTM-Enabled Dynamic Data Structures - Patricia Tries (2015).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Case Study in Optimizing HTM-Enabled Dynamic Data Structures - Patricia Tries (2015).pdf",
+  "content_hash": "61b8a2b2e55eab234dbe3db4e7c7f80b233e0e7787d04c82e49674622a5284e7",
+  "total_chunks": 42,
+  "next_chunk_index": 42,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

@@ -1,0 +1,13 @@
+{
+  "filename": "A Lock-Free Wait-Free Hash Table - Slides (070221_LockFreeHash).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Lock-Free Wait-Free Hash Table - Slides (070221_LockFreeHash).pdf",
+  "content_hash": "f32859a77b75755e7acdd508479aede72a72c83aa8776702541e90043b8f4337",
+  "total_chunks": 13,
+  "next_chunk_index": 13,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

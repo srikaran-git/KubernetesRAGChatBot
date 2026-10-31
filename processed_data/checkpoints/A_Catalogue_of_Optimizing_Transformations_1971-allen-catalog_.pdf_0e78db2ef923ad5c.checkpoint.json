@@ -1,0 +1,13 @@
+{
+  "filename": "A Catalogue of Optimizing Transformations (1971-allen-catalog).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Catalogue of Optimizing Transformations (1971-allen-catalog).pdf",
+  "content_hash": "549e4c94b00358a9036c613ebc89eadaed8a5812ae18435f591aebae91a1dd66",
+  "total_chunks": 37,
+  "next_chunk_index": 37,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

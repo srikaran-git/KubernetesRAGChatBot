@@ -1,0 +1,13 @@
+{
+  "filename": "A Framework for Building Extensible C++ Class Libraries - 1993.pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Framework for Building Extensible C++ Class Libraries - 1993.pdf",
+  "content_hash": "2d55277d68a40286b1a0c48fff185ccb7b36483b299230679b85dd98c2524b88",
+  "total_chunks": 49,
+  "next_chunk_index": 49,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

@@ -6,22 +6,32 @@ from app.config import settings
 
 
 # Production gateway config:
-#   - Fallback: primary @rag/llama-3.3-70b-versatile → @brag/llama-3.1-8b-instant on failure
+#   - Fallback: primary @ragchatbot/google/gemini-2.5-flash → @groq-slug/openai/gpt-oss-120b on failure
 #   - Cache: semantic mode (requires Portkey Enterprise — silently falls back to simple on free/starter)
 #   - Retry: 2 attempts on rate limit / server error before triggering the fallback target
-GATEWAY_CONFIG = "pc-gatewa-68f008"
+GATEWAY_CONFIG = "pc-kubern-dee7d1"
 
 """{
-    "strategy": {"mode": "fallback"},
-    "cache": {"mode": "simple"},
-    "retry": {
-        "attempts": 2,
-        "on_status_codes": [429, 503]
-    },
-    "targets": [
-        {"override_params": {"model": f"@{settings.GROQ_SLUG}/llama-3.3-70b-versatile"}},
-        {"override_params": {"model": f"@{settings.GROQ_SLUG}/llama-3.1-8b-instant"}},
-    ]
+	"strategy": {
+		"mode": "fallback"
+	},
+	"cache": {
+		"mode": "simple"
+	},
+	"retry": {
+		"attempts": 2,
+		"on_status_codes": [
+			429,
+			503
+		]
+	},
+	"targets": [
+		{
+			"override_params": {
+				"model": "@ragchatbot/gemini-2.5-flash"
+			}
+		}
+	]
 }
 """
 portkey_client = Portkey(
@@ -44,7 +54,7 @@ def get_langchain_llm(feature: str = "rag") -> ChatOpenAI:
     return ChatOpenAI(
         api_key=settings.PORTKEY_API_KEY,
         base_url=PORTKEY_GATEWAY_URL,
-        model=f"@{settings.GROQ_SLUG}/llama-3.3-70b-versatile",
+        model=f"@{settings.GOOGLE_SLUG}/gemini-2.5-flash",
         temperature=0,
         default_headers=createHeaders(
             api_key=settings.PORTKEY_API_KEY,

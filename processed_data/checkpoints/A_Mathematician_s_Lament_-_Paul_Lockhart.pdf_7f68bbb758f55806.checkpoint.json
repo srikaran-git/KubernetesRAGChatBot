@@ -1,0 +1,13 @@
+{
+  "filename": "A Mathematician's Lament - Paul Lockhart.pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Mathematician's Lament - Paul Lockhart.pdf",
+  "content_hash": "ae6dea59ff59b88591055de8225c69a3124a66932473567ba835014078af7c04",
+  "total_chunks": 78,
+  "next_chunk_index": 78,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

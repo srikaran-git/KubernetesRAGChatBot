@@ -1,0 +1,13 @@
+{
+  "filename": "A Practical Minimal Perfect Hashing Method (2005).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Practical Minimal Perfect Hashing Method (2005).pdf",
+  "content_hash": "4db0c723ec5f2b2ba578db94549a99374d30d015b876ec2b1c46d6962c6283a9",
+  "total_chunks": 35,
+  "next_chunk_index": 35,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

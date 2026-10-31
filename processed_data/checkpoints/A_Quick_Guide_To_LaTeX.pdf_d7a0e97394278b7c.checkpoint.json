@@ -1,0 +1,13 @@
+{
+  "filename": "A Quick Guide To LaTeX.pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Quick Guide To LaTeX.pdf",
+  "content_hash": "9f3cfbe6dacb3a6cc2fdc933885f9f1c59535d927c9e844087f7cf983d4f1f69",
+  "total_chunks": 9,
+  "next_chunk_index": 9,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

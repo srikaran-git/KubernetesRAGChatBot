@@ -1,0 +1,13 @@
+{
+  "filename": "A Mathematical Theory of Communication (1948).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Mathematical Theory of Communication (1948).pdf",
+  "content_hash": "a9a7f83de154c7cc4b4eae2a525d638021becd59d807c4139987f293672bce6f",
+  "total_chunks": 161,
+  "next_chunk_index": 161,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

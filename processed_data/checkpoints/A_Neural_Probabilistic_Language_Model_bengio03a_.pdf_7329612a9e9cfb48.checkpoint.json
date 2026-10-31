@@ -1,0 +1,13 @@
+{
+  "filename": "A Neural Probabilistic Language Model (bengio03a).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Neural Probabilistic Language Model (bengio03a).pdf",
+  "content_hash": "d43ba92dafaf9d928a3c2a2b3810e91964401e957dd7e3b34523c462cc5e8226",
+  "total_chunks": 58,
+  "next_chunk_index": 58,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

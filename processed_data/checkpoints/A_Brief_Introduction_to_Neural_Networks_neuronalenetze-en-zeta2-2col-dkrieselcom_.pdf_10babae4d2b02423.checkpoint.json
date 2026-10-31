@@ -1,0 +1,13 @@
+{
+  "filename": "A Brief Introduction to Neural Networks (neuronalenetze-en-zeta2-2col-dkrieselcom).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Brief Introduction to Neural Networks (neuronalenetze-en-zeta2-2col-dkrieselcom).pdf",
+  "content_hash": "5d3e07bdbc6cad99443ad5a97cdc5b5c1b5f10a249b8078ae143973560138a10",
+  "total_chunks": 480,
+  "next_chunk_index": 480,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

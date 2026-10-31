@@ -1,0 +1,13 @@
+{
+  "filename": "37 Million Compilations - Investigating Novice Programming Mistakes in Large-Scale Student Data (fp1187-altadmri).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/37 Million Compilations - Investigating Novice Programming Mistakes in Large-Scale Student Data (fp1187-altadmri).pdf",
+  "content_hash": "9e697a5bfe9ba33111cc71eb4158ebb33a246f16e020b315b1c79c6dd768020d",
+  "total_chunks": 27,
+  "next_chunk_index": 27,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

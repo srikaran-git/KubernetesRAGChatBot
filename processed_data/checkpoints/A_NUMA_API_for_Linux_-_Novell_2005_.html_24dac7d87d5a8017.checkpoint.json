@@ -1,0 +1,13 @@
+{
+  "filename": "A NUMA API for Linux - Novell (2005).html",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A NUMA API for Linux - Novell (2005).html",
+  "content_hash": "803c43c8806c6710f7d69903f11eb45cfde6fb011b3cf120bc42bd2aa1b3eb34",
+  "total_chunks": 8,
+  "next_chunk_index": 8,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

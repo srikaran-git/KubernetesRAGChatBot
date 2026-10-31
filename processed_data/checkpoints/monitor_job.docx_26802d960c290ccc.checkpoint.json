@@ -1,0 +1,13 @@
+{
+  "filename": "monitor_job.docx",
+  "source_type": "true",
+  "source_scope": "true:true_data",
+  "source": "true:true_data/monitor_job.docx",
+  "content_hash": "ac426a433681227b4e2f5700b499446fb01d7972b6e8ca716ad7fb20ddcea235",
+  "total_chunks": 16,
+  "next_chunk_index": 16,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

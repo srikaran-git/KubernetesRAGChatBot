@@ -1,0 +1,13 @@
+{
+  "filename": "2018 CppCon Unwinding the Stack - Exploring how C++ Exceptions work on Windows - James McNellis.pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/2018 CppCon Unwinding the Stack - Exploring how C++ Exceptions work on Windows - James McNellis.pdf",
+  "content_hash": "c2e677dea4294c105b47a47c309518141ae28be7ae45b31c8e199d571bf0c4cc",
+  "total_chunks": 55,
+  "next_chunk_index": 55,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

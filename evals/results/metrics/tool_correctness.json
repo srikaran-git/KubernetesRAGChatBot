@@ -1,0 +1,13 @@
+{
+  "metric": "tool_correctness",
+  "updated_at": "2026-10-30T20:59:13",
+  "last_error": null,
+  "rows": {
+    "1": {
+      "question": "How do you start Redis for a Kubernetes work queue?",
+      "score": 1.0,
+      "fp": "29fea4b752e30adf",
+      "scored_at": "2026-10-30T20:59:13"
+    }
+  }
+}

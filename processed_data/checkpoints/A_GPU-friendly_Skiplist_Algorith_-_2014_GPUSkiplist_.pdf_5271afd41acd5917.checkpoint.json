@@ -1,0 +1,13 @@
+{
+  "filename": "A GPU-friendly Skiplist Algorith - 2014 (GPUSkiplist).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A GPU-friendly Skiplist Algorith - 2014 (GPUSkiplist).pdf",
+  "content_hash": "4f32abfd39b227323a46d2af0b0108599942bd319811a42befa078d6833da8d8",
+  "total_chunks": 69,
+  "next_chunk_index": 69,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

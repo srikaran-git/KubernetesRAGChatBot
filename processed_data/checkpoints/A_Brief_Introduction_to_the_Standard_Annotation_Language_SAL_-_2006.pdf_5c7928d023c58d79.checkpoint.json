@@ -1,0 +1,13 @@
+{
+  "filename": "A Brief Introduction to the Standard Annotation Language (SAL) - 2006.pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Brief Introduction to the Standard Annotation Language (SAL) - 2006.pdf",
+  "content_hash": "d52d4d7b77119c8cdb4f240fa732cd2276e0e108896deba7ec8bb362b9f81d6f",
+  "total_chunks": 15,
+  "next_chunk_index": 15,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

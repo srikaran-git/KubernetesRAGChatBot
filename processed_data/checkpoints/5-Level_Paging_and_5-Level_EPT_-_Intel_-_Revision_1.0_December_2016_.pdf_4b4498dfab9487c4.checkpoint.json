@@ -1,0 +1,13 @@
+{
+  "filename": "5-Level Paging and 5-Level EPT - Intel - Revision 1.0 (December, 2016).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/5-Level Paging and 5-Level EPT - Intel - Revision 1.0 (December, 2016).pdf",
+  "content_hash": "624b0e55a81a8fc285eeb651b9dca583f2740261636bcf6acd464c7f8d2c297c",
+  "total_chunks": 59,
+  "next_chunk_index": 59,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

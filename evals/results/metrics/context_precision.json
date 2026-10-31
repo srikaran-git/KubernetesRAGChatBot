@@ -1,0 +1,97 @@
+{
+  "metric": "context_precision",
+  "updated_at": "2026-10-31T15:45:44",
+  "last_error": null,
+  "rows": {
+    "1": {
+      "question": "How do you start Redis for a Kubernetes work queue?",
+      "score": 1.0,
+      "fp": "f6721b366b796f08",
+      "scored_at": "2026-10-31T15:35:25"
+    },
+    "2": {
+      "question": "What does the parallelism field do in the Kubernetes job-wq-2 manifest?",
+      "score": 0.0,
+      "fp": "6770751c673395a2",
+      "scored_at": "2026-10-31T15:36:10"
+    },
+    "3": {
+      "question": "How do you fill the Redis work queue with tasks using the CLI?",
+      "score": 0.5,
+      "fp": "a33b66970e7438b4",
+      "scored_at": "2026-10-31T15:36:55"
+    },
+    "4": {
+      "question": "What is the difference between HPA and VPA in Kubernetes?",
+      "score": 0.0,
+      "fp": "027dbd20e24fcce3",
+      "scored_at": "2026-10-31T15:37:39"
+    },
+    "5": {
+      "question": "How do you install the Metrics Server for Kubernetes pod autoscaling?",
+      "score": 0.0,
+      "fp": "f183b8e5a3a4b6f4",
+      "scored_at": "2026-10-31T15:38:24"
+    },
+    "6": {
+      "question": "Which kubectl commands confirm that the Metrics Server is collecting data?",
+      "score": 0.0,
+      "fp": "5ef63b38d7539ebf",
+      "scored_at": "2026-10-31T15:39:09"
+    },
+    "7": {
+      "question": "What Databricks CLI command retrieves the details of a specific job?",
+      "score": 1.0,
+      "fp": "c5a3c3fedba76d5c",
+      "scored_at": "2026-10-31T15:39:53"
+    },
+    "8": {
+      "question": "When should you use the Databricks REST API instead of the CLI or SDK?",
+      "score": 1.0,
+      "fp": "8d91facd60075673",
+      "scored_at": "2026-10-31T15:40:37"
+    },
+    "9": {
+      "question": "What are the three main developer tools for managing Databricks jobs programmatically?",
+      "score": 1.0,
+      "fp": "35ba70d5643ef4cd",
+      "scored_at": "2026-10-31T15:41:23"
+    },
+    "10": {
+      "question": "What are the valid restart policy values for a Kubernetes Job pod?",
+      "score": 1.0,
+      "fp": "3e29a14e6f7fc750",
+      "scored_at": "2026-10-31T15:42:08"
+    },
+    "11": {
+      "question": "What are the completions and parallelism fields in a Kubernetes Job spec?",
+      "score": 1.0,
+      "fp": "ade3e88e240d55a0",
+      "scored_at": "2026-10-31T15:42:52"
+    },
+    "12": {
+      "question": "Which Kubernetes API group does a Job resource belong to?",
+      "score": 1.0,
+      "fp": "b7d96f98309af735",
+      "scored_at": "2026-10-31T15:43:35"
+    },
+    "13": {
+      "question": "How do you start a local Kubernetes cluster using Minikube?",
+      "score": 1.0,
+      "fp": "9bc297a072d46c6b",
+      "scored_at": "2026-10-31T15:44:18"
+    },
+    "14": {
+      "question": "What kubectl command checks the status of a running Kubernetes Job?",
+      "score": 1.0,
+      "fp": "0b5001829585c73e",
+      "scored_at": "2026-10-31T15:45:01"
+    },
+    "15": {
+      "question": "How do you verify that the core Kubernetes components are running after starting Minikube?",
+      "score": 1.0,
+      "fp": "7d8a98149ab5e719",
+      "scored_at": "2026-10-31T15:45:44"
+    }
+  }
+}

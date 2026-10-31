@@ -1,0 +1,13 @@
+{
+  "filename": "A Comparison of Programming Languages in Economics (16-Jun-2014).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Comparison of Programming Languages in Economics (16-Jun-2014).pdf",
+  "content_hash": "f0ae544e30529092243322369447551520627418850040794d944de2fe140d24",
+  "total_chunks": 34,
+  "next_chunk_index": 34,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

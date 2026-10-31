@@ -1,0 +1,13 @@
+{
+  "filename": "A Little Journey Inside Windows Memory.pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Little Journey Inside Windows Memory.pdf",
+  "content_hash": "88e40ab69f78b2a411a5793d09252c1293e29f06e8720225f47efc12d24f1d6f",
+  "total_chunks": 20,
+  "next_chunk_index": 20,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

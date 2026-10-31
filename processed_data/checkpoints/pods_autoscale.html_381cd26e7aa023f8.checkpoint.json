@@ -1,0 +1,13 @@
+{
+  "filename": "pods_autoscale.html",
+  "source_type": "true",
+  "source_scope": "true:true_data",
+  "source": "true:true_data/pods_autoscale.html",
+  "content_hash": "0463f11e6c93c822fd95e87d661b14795a7186cd25736a3105dabee86cebfed2",
+  "total_chunks": 18,
+  "next_chunk_index": 18,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

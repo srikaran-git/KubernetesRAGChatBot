@@ -1,183 +1,700 @@
-import os
-import sys
-import uuid
-import json
-import logfire
+"""Universal document ingestion for the Enterprise Hybrid RAG API.
 
-from qdrant_client import QdrantClient
-from qdrant_client.http import models
+Pipeline:
+    Parse -> Chunk -> Dense + Sparse embeddings -> Qdrant hybrid indexing
+    -> Save checkpoint
+
+The existing dense-only collection is preserved. By default, documents are
+indexed into `enterprise_rag_hybrid`.
+
+Usage:
+    python -m app.ingestion.processor DATA
+    python -m app.ingestion.processor DATA/true_data true
+    python -m app.ingestion.processor DATA --wipe
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import sys
+from pathlib import Path
+from typing import Optional
+
+import logfire
+from qdrant_client import QdrantClient, models
 
 from app.config import settings
-from app.services.retrieval.embeddings import embed_texts, get_embedding_dim
-from app.ingestion.loaders.pdf import parse_pdf
-from app.ingestion.loaders.html import parse_html
-from app.ingestion.loaders.text import parse_text
 from app.ingestion.chunking.splitter import chunk_text
+from app.ingestion.loaders.html import parse_html
+from app.ingestion.loaders.pdf import parse_pdf
+from app.ingestion.loaders.text import parse_text
+from app.services.retrieval.embeddings import GEMINI_MODEL, get_embedding_dim
+from app.services.retrieval.hybrid_index import (
+    ensure_hybrid_collection,
+    index_chunks,
+)
 
-logfire.configure(service_name="enterprise-ingestion-service")
+logfire.configure(service_name="Enterprise-Ingestion-Service")
 
-# Local folder where parsed + chunked JSON metadata is saved (replaces GCS processed bucket)
-PROCESSED_DATA_DIR = "processed_data"
 
-# Initialize Qdrant Client
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+
+PROCESSED_DATA_DIR = Path("processed_data")
+
+# Keep the original dense-only collection intact.
+# You can override this with QDRANT_HYBRID_COLLECTION in your environment.
+HYBRID_COLLECTION = (
+    getattr(settings, "QDRANT_HYBRID_COLLECTION", None)
+    or os.getenv("QDRANT_HYBRID_COLLECTION")
+    or "enterprise_rag_hybrid"
+)
+
+DEFAULT_BATCH_SIZE = 20
+EMBEDDING_DIMENSION = get_embedding_dim()
+EMBEDDING_VERSION = f"{GEMINI_MODEL.removeprefix('models/')}-{EMBEDDING_DIMENSION}d"
+
+SUPPORTED_EXTENSIONS = {
+    ".pdf",
+    ".html",
+    ".htm",
+    ".txt",
+    ".docx",
+    ".pptx",
+}
+
+
+# ---------------------------------------------------------------------------
+# Qdrant client
+# ---------------------------------------------------------------------------
+
 qdrant_client = QdrantClient(
     url=settings.QDRANT_URL,
     api_key=settings.QDRANT_API_KEY,
 )
 
 
-def save_processed_locally(data: dict, source_type: str, filename: str) -> str:
-    """Save parsed chunk metadata as JSON in processed_data/<source_type>/."""
-    folder = os.path.join(PROCESSED_DATA_DIR, source_type)
-    os.makedirs(folder, exist_ok=True)
-    dest = os.path.join(folder, f"{filename}.json")
-    with open(dest, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    return dest
+# ---------------------------------------------------------------------------
+# Local persistence and checkpoint helpers
+# ---------------------------------------------------------------------------
+
+def safe_filename(filename: str) -> str:
+    """Convert a filename into a filesystem-safe label."""
+    return re.sub(r"[^A-Za-z0-9._-]+", "_", filename)
 
 
-def process_file(file_path: str, filename: str, source_type: str):
-    """Parse → chunk → save locally → embed → index in Qdrant."""
-    with logfire.span("Processing File", file=filename, source=source_type):
+def source_key(source_type: str, filename: str) -> str:
+    """Build a unique source identifier, including the source category."""
+    return f"{source_type.strip()}/{filename.strip()}"
+
+
+def infer_source_type(path_name: str, explicit_source_type: Optional[str]) -> str:
+    """Use an explicit category when supplied, otherwise infer a stable one."""
+    if explicit_source_type:
+        return explicit_source_type
+
+    name = path_name.lower()
+    if "true" in name:
+        return "true"
+    if "noisy" in name:
+        return "noisy"
+    return "general"
+
+
+def content_hash(chunks: list[str]) -> str:
+    """Hash chunk content so stale checkpoints are not trusted."""
+    serialized = json.dumps(
+        chunks,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+
+
+def checkpoint_path(source_key: str) -> Path:
+    """Return a stable checkpoint path without filename collisions."""
+    digest = hashlib.sha256(source_key.encode("utf-8")).hexdigest()[:16]
+    label = safe_filename(Path(source_key).name)
+    checkpoint_dir = PROCESSED_DATA_DIR / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+    return checkpoint_dir / f"{label}_{digest}.checkpoint.json"
+
+
+def save_json_atomically(path: Path, data: dict) -> None:
+    """Write JSON through a temporary file to avoid partial checkpoint files."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = path.with_suffix(path.suffix + ".tmp")
+
+    with temporary_path.open("w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False, indent=2)
+        file.flush()
+        os.fsync(file.fileno())
+
+    os.replace(temporary_path, path)
+
+
+def load_checkpoint(path: Path) -> Optional[dict]:
+    """Read a checkpoint, returning None if it is missing or invalid."""
+    if not path.exists():
+        return None
+
+    try:
+        with path.open("r", encoding="utf-8") as file:
+            checkpoint = json.load(file)
+
+        if not isinstance(checkpoint, dict):
+            raise ValueError("Checkpoint must contain a JSON object")
+
+        return checkpoint
+
+    except (OSError, json.JSONDecodeError, ValueError) as error:
+        logfire.warning(
+            "Checkpoint could not be read; the document will be reindexed.",
+            path=str(path),
+            error=str(error),
+        )
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Document parsing
+# ---------------------------------------------------------------------------
+
+def extract_text(file_path: str, filename: str) -> str:
+    """Parse a supported document into plain text."""
+    extension = Path(filename).suffix.lower()
+
+    if extension == ".pdf":
+        return parse_pdf(file_path)
+
+    if extension in {".html", ".htm"}:
+        return parse_html(file_path)
+
+    if extension == ".txt":
+        return parse_text(file_path)
+
+    if extension in {".docx", ".pptx"}:
+        from app.ingestion.loaders.office import parse_office
+
+        return parse_office(file_path)
+
+    raise ValueError(f"Unsupported file extension: {extension}")
+
+
+# ---------------------------------------------------------------------------
+# Hybrid collection setup
+# ---------------------------------------------------------------------------
+
+def ensure_ingestion_collection(wipe: bool = False) -> None:
+    """Ensure the hybrid collection exists without modifying the old collection.
+
+    When wipe=True, only the hybrid collection is deleted and recreated.
+    The original settings.QDRANT_COLLECTION is never deleted here.
+    """
+    if wipe and qdrant_client.collection_exists(HYBRID_COLLECTION):
+        logfire.warning(
+            "Deleting the hybrid collection because --wipe was requested.",
+            collection=HYBRID_COLLECTION,
+        )
+        qdrant_client.delete_collection(
+            collection_name=HYBRID_COLLECTION,
+        )
+
+    ensure_hybrid_collection(
+        client=qdrant_client,
+        collection_name=HYBRID_COLLECTION,
+        dense_dim=EMBEDDING_DIMENSION,
+    )
+
+    logfire.info(
+        "Hybrid Qdrant collection is ready.",
+        collection=HYBRID_COLLECTION,
+        dense_dimension=EMBEDDING_DIMENSION,
+    )
+
+
+def source_is_indexed(source: str, expected_chunks: int) -> bool:
+    """Confirm the current collection still contains every chunk for a source."""
+    result = qdrant_client.count(
+        collection_name=HYBRID_COLLECTION,
+        count_filter=models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="source",
+                    match=models.MatchValue(value=source),
+                )
+            ]
+        ),
+        exact=True,
+    )
+    return result.count == expected_chunks
+
+
+def delete_missing_sources(source_scope: str, current_sources: set[str]) -> int:
+    """Remove vectors for files no longer present in a fully scanned scope."""
+    deleted = 0
+    offset = None
+    source_scope_filter = models.Filter(
+        must=[
+            models.FieldCondition(
+                key="source_scope",
+                match=models.MatchValue(value=source_scope),
+            )
+        ]
+    )
+
+    while True:
+        points, offset = qdrant_client.scroll(
+            collection_name=HYBRID_COLLECTION,
+            scroll_filter=source_scope_filter,
+            offset=offset,
+            limit=100,
+            with_payload=["source"],
+            with_vectors=False,
+        )
+        stale_ids = [
+            point.id
+            for point in points
+            if (point.payload or {}).get("source") not in current_sources
+        ]
+        if stale_ids:
+            qdrant_client.delete(
+                collection_name=HYBRID_COLLECTION,
+                points_selector=stale_ids,
+                wait=True,
+            )
+            deleted += len(stale_ids)
+
+        if offset is None:
+            return deleted
+
+
+# ---------------------------------------------------------------------------
+# Single-file ingestion
+# ---------------------------------------------------------------------------
+
+def process_file(
+    file_path: str,
+    filename: str,
+    source_type: str,
+    source_scope: Optional[str] = None,
+    batch_size: int = DEFAULT_BATCH_SIZE,
+    force_reindex: bool = False,
+) -> bool:
+    """Parse and index a file into the hybrid collection.
+
+    Returns:
+        True if the file was indexed or was already up to date.
+        False if the file was unsupported or contained no usable text.
+
+    Exceptions during parsing, embedding, or indexing are logged and raised
+    again so the caller cannot mistakenly report a successful ingestion.
+    """
+    if batch_size < 1:
+        raise ValueError("batch_size must be at least 1")
+
+    extension = Path(filename).suffix.lower()
+
+    if extension not in SUPPORTED_EXTENSIONS:
+        logfire.warning(
+            "Skipping unsupported file type.",
+            filename=filename,
+            extension=extension,
+        )
+        return False
+
+    source_scope = source_scope or source_type
+    source_id = source_key(source_scope, filename)
+    checkpoint_file = checkpoint_path(source_id)
+
+    with logfire.span(
+        "Processing File",
+        file=filename,
+        source=source_type,
+        collection=HYBRID_COLLECTION,
+    ):
         try:
-            # 1. Extract text based on file extension
-            ext = filename.lower().rsplit(".", 1)[-1]
-            if ext == "pdf":
-                full_text = parse_pdf(file_path)
-            elif ext in ("html", "htm"):
-                full_text = parse_html(file_path)
-            elif ext == "txt":
-                full_text = parse_text(file_path)
-            elif ext in ("docx", "pptx"):
-                from app.ingestion.loaders.office import parse_office
-                full_text = parse_office(file_path)
-            else:
-                logfire.warning(f"Skipping unsupported file type: {filename}")
-                return
+            # 1. Extract text.
+            full_text = extract_text(file_path, filename)
 
             if not full_text or not full_text.strip():
-                logfire.warning(f"No text extracted from {filename} — skipping.")
-                return
+                logfire.warning(
+                    "No text extracted; skipping document.",
+                    filename=filename,
+                )
+                return False
 
-            # 2. Chunk text
-            chunks = chunk_text(full_text)
+            # 2. Create clean chunks. Filtering them here keeps chunk indices
+            #    consistent with the hybrid indexer's deterministic IDs.
+            chunks = [
+                chunk.strip()
+                for chunk in chunk_text(full_text)
+                if chunk and chunk.strip()
+            ]
+
             if not chunks:
-                return
+                logfire.warning(
+                    "No usable chunks were generated.",
+                    filename=filename,
+                )
+                return False
 
-            # 3. Save processed metadata locally
-            processed_data = {
+            total_chunks = len(chunks)
+            content_digest = content_hash(chunks)
+
+            # 3. Skip only when the checkpoint confirms that the same content
+            #    was fully indexed. Older checkpoints without a content hash
+            #    will trigger one safe reindex.
+            checkpoint = load_checkpoint(checkpoint_file)
+
+            if (
+                not force_reindex
+                and checkpoint is not None
+                and checkpoint.get("completed") is True
+                and checkpoint.get("content_hash") == content_digest
+                and checkpoint.get("total_chunks") == total_chunks
+                and checkpoint.get("source") == source_id
+                and checkpoint.get("collection") == HYBRID_COLLECTION
+                and checkpoint.get("embedding_version") == EMBEDDING_VERSION
+                and checkpoint.get("embedding_dimension") == EMBEDDING_DIMENSION
+                and source_is_indexed(source_id, total_chunks)
+            ):
+                logfire.info(
+                    "Document is already up to date.",
+                    filename=filename,
+                    chunk_count=total_chunks,
+                )
+                return True
+
+            # 4. Index the complete file.
+            #
+            # index_chunks() performs its own batched embedding/upsert work.
+            # Calling it once for the full document is important: its cleanup
+            # of stale tail chunks must not run after an individual batch.
+            logfire.info(
+                "Starting dense + sparse indexing.",
+                filename=filename,
+                chunks=total_chunks,
+                batch_size=batch_size,
+                collection=HYBRID_COLLECTION,
+            )
+
+            indexed_count = index_chunks(
+                client=qdrant_client,
+                collection_name=HYBRID_COLLECTION,
+                chunks=chunks,
+                source=source_id,
+                source_type=source_type,
+                source_scope=source_scope,
+                batch_size=batch_size,
+            )
+
+            if indexed_count != total_chunks:
+                raise RuntimeError(
+                    f"Expected to index {total_chunks} chunks for "
+                    f"{filename}, but index_chunks reported {indexed_count}."
+                )
+
+            # 5. Save the completion checkpoint only after indexing succeeds.
+            completed_checkpoint = {
                 "filename": filename,
                 "source_type": source_type,
-                "chunks": chunks,
+                "source_scope": source_scope,
+                "source": source_id,
+                "content_hash": content_digest,
+                "total_chunks": total_chunks,
+                "next_chunk_index": total_chunks,
+                "completed": True,
+                "collection": HYBRID_COLLECTION,
+                "embedding_version": EMBEDDING_VERSION,
+                "embedding_dimension": EMBEDDING_DIMENSION,
             }
-            local_path = save_processed_locally(processed_data, source_type, filename)
-            logfire.info(f"Saved processed data → {local_path}")
 
-            # 4. Embed and index in Qdrant
-            with logfire.span("Vectorizing & Indexing"):
-                embeddings = embed_texts(chunks)
-                points = [
-                    models.PointStruct(
-                        id=str(uuid.uuid4()),
-                        vector=vector,
-                        payload={
-                            "text": chunk,
-                            "source": filename,
-                            "source_type": source_type,
-                        },
-                    )
-                    for chunk, vector in zip(chunks, embeddings)
-                ]
-
-                qdrant_client.upsert(
-                    collection_name=settings.QDRANT_COLLECTION,
-                    points=points,
-                )
-                logfire.info(f"Indexed {len(points)} points to Qdrant from {filename}.")
-
-        except Exception as e:
-            logfire.error(f"Failed to process {filename}: {e}")
-
-
-def process_directory(dir_path: str, source_type: str):
-    """Process every file in a directory."""
-    with logfire.span("Scanning Directory", path=dir_path, source=source_type):
-        files = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
-        logfire.info(f"Found {len(files)} files in {dir_path}.")
-        for filename in files:
-            process_file(os.path.join(dir_path, filename), filename, source_type)
-
-
-def run_universal_ingestion(base_dir: str, explicit_source_type: str = None, wipe: bool = False):
-    """
-    Scan base_dir, map sub-folders to source types, and ingest all documents.
-    Pass --wipe to drop and recreate the Qdrant collection before ingestion.
-    """
-    with logfire.span("Universal Ingestion Started", base_directory=base_dir):
-
-        # Wipe collection if requested
-        if wipe:
-            with logfire.span("Wiping Collection"):
-                if qdrant_client.collection_exists(settings.QDRANT_COLLECTION):
-                    qdrant_client.delete_collection(settings.QDRANT_COLLECTION)
-                    logfire.info(f"Collection '{settings.QDRANT_COLLECTION}' deleted.")
-
-        # Recreate collection — dimension resolved at runtime after embedding model probe
-        if not qdrant_client.collection_exists(settings.QDRANT_COLLECTION):
-            dim = get_embedding_dim()
-            qdrant_client.create_collection(
-                collection_name=settings.QDRANT_COLLECTION,
-                vectors_config=models.VectorParams(
-                    size=dim,
-                    distance=models.Distance.COSINE,
-                ),
+            save_json_atomically(
+                checkpoint_file,
+                completed_checkpoint,
             )
+
             logfire.info(
-                f"Created collection '{settings.QDRANT_COLLECTION}' "
-                f"({dim}-dim, Cosine)."
+                "Document indexed successfully.",
+                filename=filename,
+                indexed_chunks=indexed_count,
+                collection=HYBRID_COLLECTION,
+                checkpoint=str(checkpoint_file),
             )
 
-        # Route to sub-folders or treat the whole dir as one source
-        subdirs = [
-            d for d in os.listdir(base_dir)
-            if os.path.isdir(os.path.join(base_dir, d))
-        ]
+            return True
 
-        if not subdirs:
-            if explicit_source_type:
-                source_type = explicit_source_type
-            else:
-                base_name = os.path.basename(os.path.normpath(base_dir)).lower()
-                source_type = (
-                    "true" if "true" in base_name
-                    else "noisy" if "noisy" in base_name
-                    else "general"
+        except Exception as error:
+            logfire.error(
+                "Document ingestion failed.",
+                filename=filename,
+                source=source_type,
+                collection=HYBRID_COLLECTION,
+                error=str(error),
+            )
+            raise
+
+
+# ---------------------------------------------------------------------------
+# Directory ingestion
+# ---------------------------------------------------------------------------
+
+def process_directory(
+    dir_path: str,
+    source_type: str,
+    force_reindex: bool = False,
+    recursive: bool = True,
+    source_scope: Optional[str] = None,
+) -> None:
+    """Process every supported file in a directory.
+
+    All files are attempted. If one or more fail, a RuntimeError is raised
+    at the end so automated jobs can detect the failure.
+    """
+    directory = Path(dir_path)
+    source_scope = source_scope or source_type
+
+    if not directory.exists():
+        raise FileNotFoundError(f"Directory does not exist: {dir_path}")
+
+    if not directory.is_dir():
+        raise NotADirectoryError(f"Not a directory: {dir_path}")
+
+    with logfire.span(
+        "Scanning Directory",
+        path=str(directory),
+        source=source_type,
+    ):
+        candidates = directory.rglob("*") if recursive else directory.iterdir()
+        files = sorted(path for path in candidates if path.is_file())
+
+        logfire.info(
+            "Directory scan completed.",
+            directory=str(directory),
+            file_count=len(files),
+        )
+
+        failures: list[str] = []
+        succeeded = 0
+        skipped = 0
+        current_sources = {
+            source_key(
+                source_scope,
+                file_path.relative_to(directory).as_posix(),
+            )
+            for file_path in files
+            if file_path.suffix.lower() in SUPPORTED_EXTENSIONS
+        }
+
+        for file_path in files:
+            try:
+                processed = process_file(
+                    file_path=str(file_path),
+                    filename=file_path.relative_to(directory).as_posix(),
+                    source_type=source_type,
+                    source_scope=source_scope,
+                    force_reindex=force_reindex,
                 )
-            logfire.info(f"No sub-folders found — processing '{base_dir}' as '{source_type}'.")
-            process_directory(base_dir, source_type)
+
+                if processed:
+                    succeeded += 1
+                else:
+                    skipped += 1
+
+            except Exception as error:
+                failures.append(f"{file_path.name}: {error}")
+                logfire.error(
+                    "File failed; continuing with the next file.",
+                    filename=file_path.name,
+                    error=str(error),
+                )
+
+        logfire.info(
+            "Directory ingestion finished.",
+            directory=str(directory),
+            succeeded=succeeded,
+            skipped=skipped,
+            failed=len(failures),
+        )
+
+        if failures:
+            details = "\n".join(f"- {failure}" for failure in failures)
+            raise RuntimeError(
+                f"{len(failures)} file(s) failed in {directory}:\n{details}"
+            )
+
+        deleted = delete_missing_sources(source_scope, current_sources)
+        if deleted:
+            logfire.info(
+                "Removed vectors for deleted source files.",
+                source_scope=source_scope,
+                point_count=deleted,
+            )
+
+
+# ---------------------------------------------------------------------------
+# Universal ingestion entry point
+# ---------------------------------------------------------------------------
+
+def run_universal_ingestion(
+    base_dir: str,
+    explicit_source_type: Optional[str] = None,
+    wipe: bool = False,
+) -> None:
+    """Ingest a directory tree, mapping subdirectories to source types.
+
+    If the input directory has subdirectories, each direct subdirectory is
+    treated as a source category. Otherwise, explicit_source_type is used,
+    falling back to a category inferred from the directory name.
+
+    --wipe deletes only HYBRID_COLLECTION and forces files to be reindexed.
+    """
+    base_path = Path(base_dir)
+
+    if not base_path.exists():
+        raise FileNotFoundError(f"Input path does not exist: {base_dir}")
+
+    if not base_path.is_dir():
+        raise NotADirectoryError(f"Input path is not a directory: {base_dir}")
+
+    with logfire.span(
+        "Universal Ingestion Started",
+        base_directory=str(base_path),
+        collection=HYBRID_COLLECTION,
+    ):
+        # Create the hybrid collection before processing any files.
+        ensure_ingestion_collection(wipe=wipe)
+
+        subdirectories = sorted(
+            path
+            for path in base_path.iterdir()
+            if path.is_dir()
+        )
+
+        if not subdirectories:
+            source_type = infer_source_type(base_path.name, explicit_source_type)
+
+            logfire.info(
+                "Processing input directory as a single source.",
+                directory=str(base_path),
+                source_type=source_type,
+            )
+
+            process_directory(
+                dir_path=str(base_path),
+                source_type=source_type,
+                force_reindex=wipe,
+            )
+
         else:
-            for subdir in subdirs:
-                source_type = (
-                    "true" if "true" in subdir.lower()
-                    else "noisy" if "noisy" in subdir.lower()
-                    else subdir
+            failures: list[str] = []
+
+            # A mixed layout may contain files at the root as well as category
+            # subdirectories. Process the root files without traversing into the
+            # categories, which are handled below with their own source types.
+            if any(path.is_file() for path in base_path.iterdir()):
+                root_source_type = infer_source_type(
+                    base_path.name,
+                    explicit_source_type,
                 )
-                process_directory(os.path.join(base_dir, subdir), source_type)
+                try:
+                    process_directory(
+                        dir_path=str(base_path),
+                        source_type=root_source_type,
+                        force_reindex=wipe,
+                        recursive=False,
+                        source_scope=f"{root_source_type}:root",
+                    )
+                except Exception as error:
+                    failures.append(f"{base_path.name}: {error}")
+                    logfire.error(
+                        "Root-level files failed.",
+                        directory=str(base_path),
+                        error=str(error),
+                    )
+
+            for subdirectory in subdirectories:
+                source_type = infer_source_type(
+                    subdirectory.name,
+                    explicit_source_type,
+                )
+
+                try:
+                    process_directory(
+                        dir_path=str(subdirectory),
+                        source_type=source_type,
+                        force_reindex=wipe,
+                        source_scope=(
+                            f"{source_type}:"
+                            f"{subdirectory.relative_to(base_path).as_posix()}"
+                        ),
+                    )
+                except Exception as error:
+                    failures.append(f"{subdirectory.name}: {error}")
+                    logfire.error(
+                        "Subdirectory ingestion failed.",
+                        directory=str(subdirectory),
+                        error=str(error),
+                    )
+
+            if failures:
+                details = "\n".join(f"- {failure}" for failure in failures)
+                raise RuntimeError(
+                    f"Ingestion failed for {len(failures)} "
+                    f"subdirectory/subdirectories:\n{details}"
+                )
+
+        logfire.info(
+            "Universal ingestion completed successfully.",
+            directory=str(base_path),
+            collection=HYBRID_COLLECTION,
+        )
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def main() -> int:
+    """Command-line entry point."""
+    args = sys.argv[1:]
+    wipe_requested = "--wipe" in args
+    args = [arg for arg in args if arg != "--wipe"]
+
+    target_dir = args[0] if args else "DATA"
+    explicit_type = args[1] if len(args) > 1 else None
+
+    if not Path(target_dir).exists():
+        print(f"Error: path '{target_dir}' does not exist.")
+        return 1
+
+    try:
+        run_universal_ingestion(
+            base_dir=target_dir,
+            explicit_source_type=explicit_type,
+            wipe=wipe_requested,
+        )
+    except Exception as error:
+        logfire.error(
+            "Ingestion job failed.",
+            directory=target_dir,
+            error=str(error),
+        )
+        print(f"Ingestion failed: {error}")
+        return 1
+
+    print(
+        "Ingestion completed successfully. "
+        f"Hybrid collection: {HYBRID_COLLECTION}"
+    )
+    return 0
 
 
 if __name__ == "__main__":
-    # Usage:
-    #   python -m app.ingestion.processor DATA --wipe
-    #   python -m app.ingestion.processor DATA/true_data true
-    wipe_requested = "--wipe" in sys.argv
-    clean_args = [a for a in sys.argv if a != "--wipe"]
-
-    target_dir = clean_args[1] if len(clean_args) > 1 else "DATA"
-    explicit_type = clean_args[2] if len(clean_args) > 2 else None
-
-    if not os.path.exists(target_dir):
-        print(f"Error: path '{target_dir}' does not exist.")
-        sys.exit(1)
-
-    run_universal_ingestion(target_dir, explicit_source_type=explicit_type, wipe=wipe_requested)
-    logfire.info("Ingestion job completed.")
+    raise SystemExit(main())

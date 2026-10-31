@@ -1,0 +1,13 @@
+{
+  "filename": "parallel_work_queue.txt",
+  "source_type": "true",
+  "source_scope": "true:true_data",
+  "source": "true:true_data/parallel_work_queue.txt",
+  "content_hash": "d5f123b6f8cdb7a6a1b3f911a7579d7112f1626afd0131923ecb9a4d8597d534",
+  "total_chunks": 6,
+  "next_chunk_index": 6,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

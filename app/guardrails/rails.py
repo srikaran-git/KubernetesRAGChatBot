@@ -18,8 +18,8 @@ def initialize_rails() -> None:
     global _rails
 
     guard_llm = ChatGroq(
-        api_key=settings.GROQ_API_KEY,
-        model="llama-3.1-8b-instant",
+        api_key=settings.GUARDRAIL_API_KEY,
+        model="openai/gpt-oss-120b",
         temperature=0
     )
 
@@ -29,7 +29,7 @@ def initialize_rails() -> None:
     )
 
     _rails = LLMRails(config, llm=guard_llm)
-    logfire.info("🛡️ NeMo Guardrails initialised (llama-3.1-8b-instant).")
+    logfire.info("🛡️ NeMo Guardrails initialised (openai/gpt-oss-120b).")
     
     
 

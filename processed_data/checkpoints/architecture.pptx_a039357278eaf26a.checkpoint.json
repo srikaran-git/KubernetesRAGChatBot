@@ -1,0 +1,13 @@
+{
+  "filename": "architecture.pptx",
+  "source_type": "true",
+  "source_scope": "true:true_data",
+  "source": "true:true_data/architecture.pptx",
+  "content_hash": "e4c4c956a064abecb4b1bd6e634d55d931e98f1ec3b555f6bc7922c826689dbf",
+  "total_chunks": 17,
+  "next_chunk_index": 17,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

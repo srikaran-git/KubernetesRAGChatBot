@@ -1,0 +1,13 @@
+{
+  "filename": "A Brief Tutorial on Database Queries, Data Mining, and OLAP (hamel-197-manuscript-final).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Brief Tutorial on Database Queries, Data Mining, and OLAP (hamel-197-manuscript-final).pdf",
+  "content_hash": "75c8536711d128f940127f8b400fcd6c02cfee263081c2a832bbd36b075c78cf",
+  "total_chunks": 19,
+  "next_chunk_index": 19,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

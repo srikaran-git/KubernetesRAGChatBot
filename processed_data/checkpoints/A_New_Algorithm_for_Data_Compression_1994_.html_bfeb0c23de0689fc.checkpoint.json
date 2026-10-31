@@ -1,0 +1,13 @@
+{
+  "filename": "A New Algorithm for Data Compression (1994).html",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A New Algorithm for Data Compression (1994).html",
+  "content_hash": "fe38fe937a875492d850231551f7438f552bfbe91b0fecb286197a33ab2139b4",
+  "total_chunks": 8,
+  "next_chunk_index": 8,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

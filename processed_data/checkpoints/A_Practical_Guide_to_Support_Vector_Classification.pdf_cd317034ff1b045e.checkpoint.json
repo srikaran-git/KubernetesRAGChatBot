@@ -1,0 +1,13 @@
+{
+  "filename": "A Practical Guide to Support Vector Classification.pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Practical Guide to Support Vector Classification.pdf",
+  "content_hash": "23e83563df7cf25c4937aa4137e57c95ca08bfc3312105659a6c0950e050a0df",
+  "total_chunks": 24,
+  "next_chunk_index": 24,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

@@ -1,0 +1,13 @@
+{
+  "filename": "A Probabilistic Theory of Deep Learning (1504.00641v1).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Probabilistic Theory of Deep Learning (1504.00641v1).pdf",
+  "content_hash": "12451c2d8fb6deb84b5c49b8456a6973dceb702840c6bd73789fa18c2e5a2319",
+  "total_chunks": 128,
+  "next_chunk_index": 128,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}

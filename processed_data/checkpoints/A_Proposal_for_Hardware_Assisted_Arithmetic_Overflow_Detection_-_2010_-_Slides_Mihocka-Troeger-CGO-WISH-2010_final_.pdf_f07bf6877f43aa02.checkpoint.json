@@ -1,0 +1,13 @@
+{
+  "filename": "A Proposal for Hardware Assisted Arithmetic Overflow Detection - 2010 - Slides (Mihocka-Troeger-CGO-WISH-2010_final).pdf",
+  "source_type": "noisy",
+  "source_scope": "noisy:noisy_data",
+  "source": "noisy:noisy_data/A Proposal for Hardware Assisted Arithmetic Overflow Detection - 2010 - Slides (Mihocka-Troeger-CGO-WISH-2010_final).pdf",
+  "content_hash": "bc4fd398124049c4006c92b7178fd2d31586c816c0c0ff6dd2456ec1c567ea0d",
+  "total_chunks": 18,
+  "next_chunk_index": 18,
+  "completed": true,
+  "collection": "enterprise_rag_hybrid",
+  "embedding_version": "gemini-embedding-001-1024d",
+  "embedding_dimension": 1024
+}
