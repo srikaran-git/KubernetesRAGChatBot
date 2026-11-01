@@ -1,170 +1,161 @@
-# Enterprise Agentic RAG (Scalable Pipeline)
+# Enterprise Agentic RAG
 
-A production-grade, enterprise-level RAG system built with **LangGraph**, **Portkey LLM Gateway**, and **Gemini Embeddings**. The system distinguishes between technical "True Data" and random "Noisy Data" using semantic re-ranking, history-aware planning, and NeMo Guardrails for input/output safety.
+An enterprise-document assistant for Kubernetes, Intel, and networking content. It ingests local documents, stores hybrid vectors in Qdrant, retrieves and reranks relevant chunks, and answers through a LangGraph workflow.
 
-## Key Features
+## What it does
 
-- **Agentic Intelligence**: LangGraph for cyclic reasoning, multi-step planning, and conversation memory.
-- **Guardrails**: NeMo Guardrails gate blocks off-topic, jailbreak, and injection inputs before any retrieval.
-- **LLM Gateway**: Portkey routes all LLM calls with automatic fallback between primary and backup Groq keys.
-- **Enterprise Search**: Qdrant Cloud for high-performance vector search + FlashRank for local semantic reranking.
-- **Gemini Embeddings**: Google `gemini-embedding-001` (1024-dim) via `langchain-google-genai`.
-- **Local Document Parsing**: PDF, HTML, TXT, DOCX, PPTX parsed entirely on-device — no external OCR service.
-- **Observability**: Full trace nesting with **Pydantic Logfire** and **LangSmith** across every agent node.
-- **Evaluation Suite**: RAGAS-powered eval pipeline (6 metrics) with a dedicated Streamlit demo app.
+- Parses PDF, HTML, text, DOCX, and PPTX documents from `DATA/`.
+- Creates Gemini dense embeddings and FastEmbed BM25 sparse vectors.
+- Searches a Qdrant hybrid collection with RRF fusion, then reranks chunks with FlashRank.
+- Applies NeMo Guardrails before the LangGraph planner/retriever/responder workflow.
+- Provides FastAPI, Streamlit, and an optional evaluation interface.
 
----
-
-## Agent Intelligence Flow
+## Architecture
 
 ```mermaid
-graph TD
-    User((User)) --> UI[Streamlit UI]
-    UI --> API[FastAPI /query]
-    API --> Guard{NeMo Guardrails}
-    Guard -->|Blocked| UI
-    Guard -->|Pass| Planner{Planner Node}
-    Planner -->|Conversational| Responder[Responder Node]
-    Planner -->|Technical| Retriever[Retriever Node]
-    Retriever --> Reranker[FlashRank Local Reranker]
-    Reranker --> Responder
-    Responder --> UI
-    Responder -.-> Memory[(LangGraph MemorySaver)]
+flowchart LR
+    user([User]) --> ui[Streamlit UI]
+    ui -->|POST /query| api[FastAPI API]
+    api --> rails{NeMo Guardrails}
+    rails -->|Blocked| safe[Safe response]
+    safe --> ui
+    rails -->|Allowed| workflow[LangGraph workflow]
+    workflow --> planner[Planner]
+    planner -->|Conversational| responder[Responder]
+    planner -->|Technical| retriever[Hybrid retrieval]
+    retriever --> qdrant[(Qdrant)]
+    qdrant --> reranker[FlashRank reranker]
+    reranker --> responder
+    responder --> gateway[Portkey gateway]
+    gateway --> model[LLM provider]
+    model --> responder
+    responder --> api
+    api --> ui
+    ingest[Ingestion CLI] --> parsers[Local document parsers]
+    parsers --> embeddings[Dense and sparse embeddings]
+    embeddings --> qdrant
 ```
 
----
-
-## Project Structure
-
-```text
-├── app/
-│   ├── agent/
-│   │   └── nodes/       # Planner, Retriever, Responder LangGraph nodes
-│   ├── gateway/         # Portkey LLM gateway — primary + fallback Groq routing
-│   ├── guardrails/      # NeMo Guardrails input/output filtering
-│   ├── ingestion/
-│   │   ├── chunking/    # Paragraph-based text splitter (1500 char max)
-│   │   └── loaders/     # Local parsers — PDF (pypdf), HTML, TXT, DOCX, PPTX
-│   ├── services/
-│   │   └── retrieval/   # Gemini embeddings + Qdrant search + FlashRank reranking
-│   ├── config.py        # Centralized environment variable management
-│   └── main.py          # FastAPI entrypoint — guardrails gate + /query endpoint
-├── evals/               # RAGAS evaluation suite + Streamlit 3-tab demo
-├── ui/                  # Streamlit chat interface with reasoning step transparency
-├── processed_data/      # Auto-generated — parsed & chunked JSON output per document
-├── docs/                # Architectural and operational guides (11 docs)
-├── DATA/                # Sample datasets (True vs Noisy documentation)
-└── requirements.txt     # Pinned dependencies
-```
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Orchestration | LangChain + LangGraph |
-| LLMs | Groq (Llama 3.3 70B) via **Portkey** gateway |
-| Guardrails | NeMo Guardrails |
-| Vector DB | Qdrant Cloud |
-| Reranking | FlashRank (local, zero-latency) |
-| Embeddings | Gemini `gemini-embedding-001` (1024-dim) |
-| Document Parsing | pypdf + pdfplumber (local, no OCR service) |
-| Observability | Pydantic Logfire + LangSmith |
-| Evaluation | RAGAS + custom Tool Correctness (Jaccard) |
-
----
-
-## Getting Started
-
-### 1. Install dependencies
+Print the complete Mermaid source with:
 
 ```powershell
-python -m venv tenvv
-.\tenvv\Scripts\activate
-pip install -r requirements.txt
+python architecture.py
 ```
 
-### 2. Configure environment
+## Repository layout
 
-Create a `.env` file with the following keys:
+```text
+app/
+  agent/              LangGraph workflow and nodes
+  evaluation/         Offline hybrid-retrieval metrics
+  gateway/            Portkey client configuration
+  guardrails/         NeMo guardrail rules and setup
+  ingestion/          Parsers, chunking, and Qdrant indexing CLI
+  services/retrieval/ Embeddings, Qdrant search, and reranking
+  main.py             FastAPI application
+ui/                    Streamlit chat interfaces
+evals/                 Evaluation pipeline, metrics, and Streamlit UI
+tests/                 Unit tests
+DATA/                  Input documents
+processed_data/        Generated ingestion checkpoints and parsed output
+architecture.py        Mermaid architecture-diagram generator
+```
+
+## Prerequisites
+
+- Python 3.11 or later
+- A Qdrant Cloud cluster or compatible Qdrant endpoint
+- Gemini API key for dense embeddings
+- Portkey API key and a configured Portkey gateway/model
+- Groq API key for NeMo Guardrails
+
+## Setup
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+Configure `.env`:
 
 ```env
-# Groq Reasoning Engine (Llama 3.3)
-GROQ_API_KEY = ""
-GROQ_FALLBACK_API_KEY = ""          # second Groq key, or same as primary
+# Answer generation and planning
+PORTKEY_API_KEY=""
 
-# Portkey LLM Gateway
-PORTKEY_API_KEY = ""
+# Hybrid retrieval and ingestion
+QDRANT_CLUSTER_ENDPOINT="https://your-cluster.cloud.qdrant.io:6333"
+QDRANT_API_KEY=""
+QDRANT_HYBRID_COLLECTION="ENTERPRISE_RAG_CHATBOT"
+GEMINI_API_KEY=""
 
-# Qdrant Vector DB
-QDRANT_API_KEY = ""
-QDRANT_CLUSTER_ENDPOINT = ""        # e.g. https://your-cluster.cloud.qdrant.io:6333
+# NeMo Guardrails
+GUARDRAIL_API_KEY=""
 
-# Pydantic Logfire Observability
-LOGFIRE_TOKEN = ""
+# Optional observability
+LOGFIRE_TOKEN=""
+LANGSMITH_TRACING="true"
+LANGSMITH_API_KEY=""
+LANGSMITH_PROJECT="enterprise-rag"
 
-# LangSmith
-LANGSMITH_TRACING = true
-LANGSMITH_ENDPOINT = https://api.smith.langchain.com
-LANGSMITH_API_KEY = ""
-LANGSMITH_PROJECT = ""
+# Local UI to API connection
+BACKEND_URL="http://127.0.0.1:8000"
 
-# Streamlit UI → FastAPI
-BACKEND_URL = ""                    # e.g. http://localhost:8000
-
-# Eval judge LLM (keep separate from main key to avoid rate-limiting the live app)
-JUDGE_GROQ_API_KEY = ""
-
-# Gemini Embeddings
-GEMINI_API_KEY = ""
+# Optional evaluation judge-key rotation
+JUDGE_GROQ_API_KEY=""
+JUDGE_GROQ_API_KEY_2=""
 ```
 
-### 3. Run data ingestion
+Do not commit `.env`; it is ignored by Git.
 
-Parses all documents in `DATA/`, chunks them, saves metadata to `processed_data/`, and indexes vectors into Qdrant.
+## Ingest documents
+
+```powershell
+python -m app.ingestion.processor DATA
+```
+
+Use `--wipe` only when you intentionally want to delete and recreate the configured hybrid collection.
 
 ```powershell
 python -m app.ingestion.processor DATA --wipe
 ```
 
-> Pass `--wipe` to drop and recreate the Qdrant collection. Omit it to append to an existing collection.
+## Run the application
 
-### 4. Launch the app
+Start FastAPI:
 
 ```powershell
-# Terminal 1 — FastAPI backend
 python -m uvicorn app.main:app --reload --port 8000
+```
 
-# Terminal 2 — Streamlit UI
+Then start the local Streamlit interface in another terminal:
+
+```powershell
 python -m streamlit run ui/app.py
 ```
 
-### 5. Run the eval suite (optional)
+Open `http://127.0.0.1:8000/docs` for the API schema while the backend is running.
+
+## Run tests
 
 ```powershell
-# Requires the FastAPI backend running on :8000
+python -m pytest tests -q
+```
+
+`test_judge.py` is an optional manual connectivity check. It makes a real Groq API request only when run directly:
+
+```powershell
+python test_judge.py
+```
+
+## Run evaluations
+
+Start the backend first, then run:
+
+```powershell
 python -m streamlit run evals/app.py
 ```
 
----
-
-## Documentation Index
-
-| # | Guide | What it covers |
-|---|-------|---------------|
-| 01 | [System Overview](docs/01_SYSTEM_OVERVIEW.md) | High-level vision and end-to-end flow |
-| 02 | [Ingestion Engine](docs/02_INGESTION_ENGINE.md) | Document parsing and indexing pipeline |
-| 03 | [Node Intelligence](docs/03_NODE_INTELLIGENCE.md) | Planner, Retriever, Responder internals |
-| 04 | [Observability](docs/04_TRACING_AND_OBSERVABILITY.md) | Logfire + LangSmith tracing |
-| 05 | [Environment Variables](docs/05_ENVIRONMENT_VARIABLES.md) | All env vars and configuration reference |
-| 06 | [Known Gotchas](docs/06_KNOWN_GOTCHAS.md) | Non-obvious bugs and architectural decisions |
-| 07 | [FlashRank Reranking](docs/07_FLASHRANK_RERANKING.md) | Local semantic reranker deep-dive |
-| 08 | [Guardrails](docs/08_GUARDRAILS.md) | NeMo Guardrails implementation |
-| 09 | [LLM Gateway](docs/09_LLM_GATEWAY.md) | Portkey routing, fallback, and observability |
-| 10 | [Evals](docs/10_EVALS.md) | RAGAS metrics theory and token budget |
-| 11 | [Evals Pipeline](docs/11_EVALS_PIPELINE.md) | Live eval pipeline and Streamlit demo |
-
----
-
-*Built for High-Scale Enterprise Document Intelligence.*
+Evaluation checkpoints are saved under `evals/results/`. Rerun the pipeline after changing the model, input data, or retrieval configuration.
