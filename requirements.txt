@@ -19,6 +19,7 @@ langchain-google-genai      # LangChain integration for Gemini models
 # --- VECTOR DB & RETRIEVAL ---
 qdrant-client               # Vector Database for semantic search
 flashrank                   # Ultra-fast local cross-encoder for semantic reranking
+fastembed                    # Sparse BM25 vectors used by hybrid retrieval
 
 # --- LANGCHAIN & AGENTIC ORCHESTRATION ---
 langchain                   # Core LLM orchestration
@@ -56,6 +57,3 @@ langfuse                    # Live production monitoring, tracing & user feedbac
 
 # --- EMBEDDINGS (SENTENCE TRANSFORMERS) ---
 sentence-transformers       # Used by FlashRank reranker internally
-langchain_google_genai
-
-langchain-google-vertexai

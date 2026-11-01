@@ -3,18 +3,17 @@
 # so that spans from all modules are captured from the start.
 # ============================================================
 import logfire
-import os
 from app.config import settings
 
 
 logfire.configure(token=settings.LOGFIRE_TOKEN)
 
 # Now safe to import app modules - logfire is already active
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, HTTPException, Response
 from app.agent.graph import rag_agent
 from app.guardrails import initialize_rails, guard
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 
@@ -27,8 +26,8 @@ def startup_event():
     initialize_rails()
 
 class QueryRequest(BaseModel):
-    q: str
-    thread_id: Optional[str] = "default_user"
+    q: str = Field(min_length=1, max_length=12_000)
+    thread_id: Optional[str] = Field(default="default_user", max_length=128)
     
     
 @app.get("/")
@@ -91,12 +90,17 @@ def query(request: QueryRequest):
             "status": final_output.get("status"),
             "sources": final_output.get("documents", [])
         }
-    except Exception as e:
-        logfire.error(f"❌ Backend Execution Failed: {e}")
-        return {
-            "question": q,
-            "answer": "I apologize, but I encountered an internal error while processing your request. Please try again later.",
-            "thought_process": ["Error encountered during execution."],
-            "status": "error",
-            "sources": []
-        }
+    except Exception as exc:
+        # Returning a 200 here makes the UI and evaluation pipeline record a
+        # failed request as a valid answer. Keep the internal detail in logs
+        # and expose only a safe error message to callers.
+        logfire.error(
+            "Backend execution failed.",
+            error_type=type(exc).__name__,
+            error=str(exc),
+            thread_id=thread_id,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to process the request. Please try again later.",
+        ) from exc

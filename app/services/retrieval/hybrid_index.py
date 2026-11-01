@@ -6,8 +6,18 @@ from typing import Sequence
 
 from qdrant_client import QdrantClient, models
 
-from app.services.retrieval.embeddings import embed_texts
-from app.services.retrieval.sparse_embeddings import embed_sparse_documents
+def embed_texts(texts: list[str]) -> list[list[float]]:
+    """Load the dense embedding client only when indexing actually starts."""
+    from app.services.retrieval.embeddings import embed_texts as embed
+
+    return embed(texts)
+
+
+def embed_sparse_documents(texts: list[str]) -> list[dict[str, list]]:
+    """Load FastEmbed only when sparse indexing actually starts."""
+    from app.services.retrieval.sparse_embeddings import embed_sparse_documents as embed
+
+    return embed(texts)
 
 
 def ensure_hybrid_collection(

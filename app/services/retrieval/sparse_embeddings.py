@@ -1,16 +1,19 @@
 """Sparse query/document vectors used by Qdrant hybrid retrieval."""
+from __future__ import annotations
+
 from functools import lru_cache
 from typing import Any
-
-from fastembed import SparseTextEmbedding
-
 
 SPARSE_MODEL_NAME = "Qdrant/bm25"
 
 
 @lru_cache(maxsize=1)
-def get_sparse_model() -> SparseTextEmbedding:
+def get_sparse_model():
     """Load the local sparse model once per process."""
+    # FastEmbed imports native inference dependencies. Deferring that import
+    # keeps API/test startup fast when sparse retrieval is not used.
+    from fastembed import SparseTextEmbedding
+
     return SparseTextEmbedding(model_name=SPARSE_MODEL_NAME)
 
 

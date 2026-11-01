@@ -12,26 +12,39 @@ from app.config import settings
 GATEWAY_CONFIG = "pc-kubern-dee7d1"
 
 """{
-	"strategy": {
-		"mode": "fallback"
-	},
-	"cache": {
-		"mode": "simple"
-	},
-	"retry": {
-		"attempts": 2,
-		"on_status_codes": [
-			429,
-			503
-		]
-	},
-	"targets": [
-		{
-			"override_params": {
-				"model": "@ragchatbot/gemini-2.5-flash"
-			}
-		}
-	]
+  "strategy": {
+    "mode": "fallback",
+    "on_status_codes": [
+      429,
+      500,
+      502,
+      503,
+      504
+    ]
+  },
+  "targets": [
+    {
+      "provider": "google",
+      "api_key": "gemini-api-key-1",
+      "override_params": {
+        "model": "gemini-3.5-flash"
+      }
+    },
+    {
+      "provider": "google",
+      "api_key": "gemini-api-key-2",
+      "override_params": {
+        "model": "gemini-3.5-flash"
+      }
+    },
+    {
+      "provider": "google",
+      "api_key": "gemini-api-key-3",
+      "override_params": {
+        "model": "gemini-3.5-flash"
+      }
+    }
+  ]
 }
 """
 portkey_client = Portkey(

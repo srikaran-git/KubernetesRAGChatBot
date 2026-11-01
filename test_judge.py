@@ -32,4 +32,5 @@ async def main():
     print(response.choices[0].message.content)
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

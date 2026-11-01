@@ -8,7 +8,7 @@ A production-grade, enterprise-level RAG system built with **LangGraph**, **Port
 - **Guardrails**: NeMo Guardrails gate blocks off-topic, jailbreak, and injection inputs before any retrieval.
 - **LLM Gateway**: Portkey routes all LLM calls with automatic fallback between primary and backup Groq keys.
 - **Enterprise Search**: Qdrant Cloud for high-performance vector search + FlashRank for local semantic reranking.
-- **Gemini Embeddings**: Google `gemini-embedding-2-preview` (3072-dim) via `langchain-google-genai`.
+- **Gemini Embeddings**: Google `gemini-embedding-001` (1024-dim) via `langchain-google-genai`.
 - **Local Document Parsing**: PDF, HTML, TXT, DOCX, PPTX parsed entirely on-device — no external OCR service.
 - **Observability**: Full trace nesting with **Pydantic Logfire** and **LangSmith** across every agent node.
 - **Evaluation Suite**: RAGAS-powered eval pipeline (6 metrics) with a dedicated Streamlit demo app.
@@ -38,7 +38,7 @@ graph TD
 
 ```text
 ├── app/
-│   ├── agents/
+│   ├── agent/
 │   │   └── nodes/       # Planner, Retriever, Responder LangGraph nodes
 │   ├── gateway/         # Portkey LLM gateway — primary + fallback Groq routing
 │   ├── guardrails/      # NeMo Guardrails input/output filtering
@@ -68,7 +68,7 @@ graph TD
 | Guardrails | NeMo Guardrails |
 | Vector DB | Qdrant Cloud |
 | Reranking | FlashRank (local, zero-latency) |
-| Embeddings | Gemini `gemini-embedding-2-preview` (3072-dim) |
+| Embeddings | Gemini `gemini-embedding-001` (1024-dim) |
 | Document Parsing | pypdf + pdfplumber (local, no OCR service) |
 | Observability | Pydantic Logfire + LangSmith |
 | Evaluation | RAGAS + custom Tool Correctness (Jaccard) |
@@ -114,7 +114,7 @@ LANGSMITH_PROJECT = ""
 BACKEND_URL = ""                    # e.g. http://localhost:8000
 
 # Eval judge LLM (keep separate from main key to avoid rate-limiting the live app)
-JUDGE_GROQ = ""
+JUDGE_GROQ_API_KEY = ""
 
 # Gemini Embeddings
 GEMINI_API_KEY = ""
