@@ -24,8 +24,8 @@ def get_mermaid_diagram() -> str:
     rails -->|Blocked| blocked[Safe response]
     blocked --> ui
 
-    rails -->|Allowed| graph[LangGraph RAG workflow]
-    graph --> planner[Planner]
+    rails -->|Allowed| workflow_node[LangGraph RAG workflow]
+    workflow_node --> planner[Planner]
     planner -->|Conversational| responder[Responder]
     planner -->|Technical| retriever[Hybrid retriever]
 
