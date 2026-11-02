@@ -1,6 +1,12 @@
+import logging
+
+import logfire
+
 from app.agent.state import AgentState
 from app.gateway import get_langchain_llm
-import logfire
+
+
+logger = logging.getLogger(__name__)
 
 # Portkey-backed LLM: fallback + cache + retry — same .invoke() interface as ChatGroq
 llm = get_langchain_llm(feature="planner")
@@ -35,7 +41,19 @@ def planner_node(state: AgentState):
     """
     
     with logfire.span("🧠 Planner Decision"):
-        decision = llm.invoke(prompt).content.strip()
+        try:
+            decision = llm.invoke(prompt).content.strip()
+        except Exception as exc:
+            # Log to the Uvicorn console as well as Logfire. The API returns a
+            # safe 500 body, so this is the actionable provider error needed to
+            # diagnose an invalid Portkey configuration, model, or API key.
+            logger.exception("Planner request through Portkey failed")
+            logfire.error(
+                "Planner request through Portkey failed.",
+                error_type=type(exc).__name__,
+                error=str(exc),
+            )
+            raise
         logfire.info(f"Intent identified: {decision}")
     
     if decision == "CONVERSATIONAL":

@@ -201,7 +201,15 @@ def prep_samples(golden_dataset: dict) -> list:
             continue
  
         raw_contexts = s.get("actual_contexts") or s.get("relevant_contexts") or []
-        contexts = [c[:CONTEXT_TRUNCATE] for c in raw_contexts[:CONTEXT_LIMIT]]
+        # Golden contexts are now structured objects with text, anchors, and
+        # resolved Qdrant IDs. Live API contexts remain strings. RAGAS accepts
+        # text only, so normalize both representations at this boundary.
+        contexts = [
+            (str(context.get("text", "")) if isinstance(context, dict) else str(context))
+            [:CONTEXT_TRUNCATE]
+            for context in raw_contexts[:CONTEXT_LIMIT]
+        ]
+        contexts = [context for context in contexts if context]
  
         valid.append({**s, "actual_contexts": contexts})
  

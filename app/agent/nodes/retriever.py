@@ -11,7 +11,7 @@ def retrieve_node(state: AgentState):
 
     with logfire.span("Hybrid Knowledge Retrieval"):
         logfire.info(f"Hybrid search query: {query}")
-        raw_results = search_enterprise_knowledge(query, limit=20)
+        raw_results = search_enterprise_knowledge(query, limit=15)
         logfire.info(f"Hybrid retrieval returned {len(raw_results)} candidates")
 
         # Keep a mapping so the reranker can return text while source metadata survives.

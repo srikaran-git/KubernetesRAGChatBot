@@ -5,11 +5,10 @@ from langchain_openai import ChatOpenAI
 from app.config import settings
 
 
-# Production gateway config:
-#   - Fallback: primary @ragchatbot/google/gemini-2.5-flash → @groq-slug/openai/gpt-oss-120b on failure
-#   - Cache: semantic mode (requires Portkey Enterprise — silently falls back to simple on free/starter)
-#   - Retry: 2 attempts on rate limit / server error before triggering the fallback target
-GATEWAY_CONFIG = "pc-kubern-dee7d1"
+# The saved Portkey config owns virtual keys, fallback targets, and model
+# overrides. Do not encode a virtual-key slug in the model name here: an
+# unknown slug is rejected by Portkey before the fallback config can run.
+GATEWAY_CONFIG = settings.PORTKEY_CONFIG_ID
 
 """{
   "strategy": {
@@ -67,7 +66,7 @@ def get_langchain_llm(feature: str = "rag") -> ChatOpenAI:
     return ChatOpenAI(
         api_key=settings.PORTKEY_API_KEY,
         base_url=PORTKEY_GATEWAY_URL,
-        model=f"@{settings.GOOGLE_SLUG}/gemini-2.5-flash",
+        model=settings.PORTKEY_MODEL,
         temperature=0,
         default_headers=createHeaders(
             api_key=settings.PORTKEY_API_KEY,

@@ -38,6 +38,7 @@ from evals.metrics import (
     RUN_ORDER,
     SPECS,
 )
+from evals.hybrid_eval import evaluate as evaluate_hybrid_retrieval
 from evals.checkpoint import clear_metric_checkpoint
  
  
@@ -55,6 +56,18 @@ DISPLAY_ORDER = [
     "faithfulness", "answer_relevancy", "context_precision",
     "context_recall", "answer_correctness", "tool_correctness",
 ]
+
+HYBRID_RETRIEVAL_K = 5
+
+# Fallback for an unresolved golden dataset. A resolved dataset is preferred
+# and supplies exact source IDs from the active Qdrant collection.
+DOMAIN_SOURCE_MAP = {
+    "parallel_work_queue": "true/parallel_work_queue.txt",
+    "pods_autoscale": "true/pods_autoscale.html",
+    "job_management": "true/job_management.html",
+    "cronjobs": "true/cronjobs.docx",
+    "monitor_job": "true/monitor_job.docx",
+}
  
 METRIC_HELP = {
     "faithfulness": ("Is every claim in the answer backed by the retrieved context?",
@@ -130,6 +143,33 @@ def _state_label(row: dict) -> str:
     if row["state"] == "partial":
         return "🟡 Partial — will resume"
     return "⬜ Not run"
+
+
+def _hybrid_examples(dataset: dict) -> list[dict]:
+    """Build source-level retrieval ground truth from the golden dataset."""
+    examples = []
+    for sample in dataset.get("rag_samples", []):
+        resolved_sources = {
+            gold_chunk.get("source")
+            for context in sample.get("relevant_contexts", [])
+            if isinstance(context, dict)
+            for gold_chunk in context.get("gold_chunks", [])
+            if gold_chunk.get("source")
+        }
+        sources = (
+            sample.get("relevant_sources")
+            or sorted(resolved_sources)
+            or [DOMAIN_SOURCE_MAP.get(sample.get("domain", ""))]
+        )
+        sources = [source for source in sources if source]
+        if sources:
+            examples.append(
+                {
+                    "query": sample["question"],
+                    "relevant_sources": sources,
+                }
+            )
+    return examples
  
  
 # ─────────────────────────────────────────────────────────────────────────────
@@ -147,6 +187,9 @@ if "enriched_dataset" not in st.session_state:
  
 if "pipeline_rows" not in st.session_state:
     st.session_state.pipeline_rows = []
+
+if "hybrid_retrieval_metrics" not in st.session_state:
+    st.session_state.hybrid_retrieval_metrics = None
  
  
 golden = st.session_state.golden
@@ -275,6 +318,7 @@ with tab2:
         st.session_state.pipeline_done = False
         st.session_state.enriched_dataset = None
         st.session_state.pipeline_rows = []
+        st.session_state.hybrid_retrieval_metrics = None
         st.rerun()
  
     if load_saved_btn:
@@ -368,13 +412,61 @@ with tab2:
 # ═════════════════════════════════════════════════════════════════════════════
  
 with tab3:
-    st.subheader("Eval Metrics — RAGAS + Tool Correctness")
+    st.subheader("Eval Metrics — Retrieval, RAGAS + Tool Correctness")
  
     if not st.session_state.pipeline_done:
         st.warning("⚠️ Complete Step 2 (Live Pipeline) first to collect responses.")
     else:
         dataset = st.session_state.enriched_dataset
         samples = prep_samples(dataset)
+
+        # ── Hybrid retrieval metrics ────────────────────────────────────────
+        st.markdown("### 🔎 Hybrid retrieval metrics")
+        st.caption(
+            f"Source-level Recall@{HYBRID_RETRIEVAL_K}, Precision@{HYBRID_RETRIEVAL_K}, "
+            f"and MRR@{HYBRID_RETRIEVAL_K}. These call the configured Qdrant "
+            "hybrid retrieval service and do not use a judge LLM."
+        )
+
+        retrieval_examples = _hybrid_examples(dataset)
+        if len(retrieval_examples) != len(dataset.get("rag_samples", [])):
+            st.warning(
+                "Some golden samples have no mapped reference source and will be skipped "
+                "by the hybrid retrieval evaluation."
+            )
+
+        if st.button(
+            f"▶️ Run hybrid retrieval metrics (@{HYBRID_RETRIEVAL_K})",
+            key="run_hybrid_retrieval_metrics",
+            width="stretch",
+        ):
+            try:
+                with st.spinner("Querying Qdrant hybrid retrieval..."):
+                    st.session_state.hybrid_retrieval_metrics = evaluate_hybrid_retrieval(
+                        retrieval_examples,
+                        k=HYBRID_RETRIEVAL_K,
+                    )
+            except Exception as exc:
+                st.error(f"❌ Hybrid retrieval evaluation failed: {exc}")
+
+        hybrid_metrics = st.session_state.hybrid_retrieval_metrics
+        if hybrid_metrics:
+            r1, r2, r3, r4 = st.columns(4)
+            r1.metric(
+                f"Recall@{HYBRID_RETRIEVAL_K}",
+                f"{hybrid_metrics[f'recall@{HYBRID_RETRIEVAL_K}']:.2f}",
+            )
+            r2.metric(
+                f"Precision@{HYBRID_RETRIEVAL_K}",
+                f"{hybrid_metrics[f'precision@{HYBRID_RETRIEVAL_K}']:.2f}",
+            )
+            r3.metric(
+                f"MRR@{HYBRID_RETRIEVAL_K}",
+                f"{hybrid_metrics[f'mrr@{HYBRID_RETRIEVAL_K}']:.2f}",
+            )
+            r4.metric("Examples", hybrid_metrics["examples"])
+
+        st.divider()
  
         st.markdown(
             "Each metric is scored **one sample at a time and saved immediately** "
@@ -453,7 +545,7 @@ with tab3:
             else:
                 left = [r for r in metric_status(samples) if r["state"] != "complete"]
                 if request["only"] is None and not left:
-                    status_slot.success("✅ All 6 experiments complete!")
+                    status_slot.success("✅ All RAGAS and tool-correctness experiments complete!")
                 elif left and request["only"] is None:
                     status_slot.warning(
                         "⚠️ Some metrics are incomplete (" + ", ".join(r["title"] for r in left)

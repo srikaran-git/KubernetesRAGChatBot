@@ -4,7 +4,7 @@ An enterprise-document assistant for Kubernetes, Intel, and networking content. 
 
 ## What it does
 
-- Parses PDF, HTML, text, DOCX, and PPTX documents from `DATA/`.
+- Parses PDF, HTML, text, DOCX, and PPTX documents from `DATA/` and chunks them into 1,000-character windows with 150-character overlap.
 - Creates Gemini dense embeddings and FastEmbed BM25 sparse vectors.
 - Searches a Qdrant hybrid collection with RRF fusion, then reranks chunks with FlashRank.
 - Applies NeMo Guardrails before the LangGraph planner/retriever/responder workflow.
@@ -84,6 +84,8 @@ Configure `.env`:
 ```env
 # Answer generation and planning
 PORTKEY_API_KEY=""
+PORTKEY_CONFIG_ID="pc-your-config-id"
+PORTKEY_MODEL="gemini-2.5-flash"
 
 # Hybrid retrieval and ingestion
 QDRANT_CLUSTER_ENDPOINT="https://your-cluster.cloud.qdrant.io:6333"

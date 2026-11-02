@@ -35,10 +35,11 @@ class Settings:
 
     # --- PORTKEY ---
     PORTKEY_API_KEY = os.getenv("PORTKEY_API_KEY")
-
-    # These MUST match your Portkey provider/model slugs
-    GOOGLE_SLUG = "ragchatbot"
-    GROQ_SLUG = "groq-slug"
+    PORTKEY_CONFIG_ID = os.getenv("PORTKEY_CONFIG_ID", "pc-kubern-dee7d1")
+    # When PORTKEY_CONFIG_ID is used, Portkey selects the provider virtual key
+    # from that saved config. This value must therefore be a provider model
+    # name, not an @virtual-key/model slug.
+    PORTKEY_MODEL = os.getenv("PORTKEY_MODEL", "gemini-3.5-flash-lite")
 
 
 settings = Settings()

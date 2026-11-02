@@ -1,10 +1,10 @@
 from unittest.mock import patch
 
-from app.evaluation.hybrid_eval import evaluate
+from evals.hybrid_eval import evaluate
 
 
-@patch("app.evaluation.hybrid_eval.search_enterprise_knowledge")
-def test_evaluate_recall_and_mrr(mock_search):
+@patch("evals.hybrid_eval.search_enterprise_knowledge")
+def test_evaluate_recall_precision_and_mrr(mock_search):
     mock_search.return_value = [
         {"source": "irrelevant.pdf"},
         {"source": "target.pdf"},
@@ -15,4 +15,5 @@ def test_evaluate_recall_and_mrr(mock_search):
     )
     assert metrics["examples"] == 1
     assert metrics["recall@2"] == 1.0
+    assert metrics["precision@2"] == 0.5
     assert metrics["mrr@2"] == 0.5

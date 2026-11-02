@@ -12,7 +12,7 @@ def search_enterprise_knowledge(query: str, limit: int):
 
 
 def evaluate(examples: Iterable[dict], k: int = 5) -> dict[str, float | int]:
-    """Calculate source-level recall@k and reciprocal rank for query examples.
+    """Calculate source-level recall@k, precision@k, and MRR@k.
 
     Every example must contain ``query`` and ``relevant_sources``. Matching is
     performed against the retrieval result's ``source`` field, not chunk text.
@@ -22,6 +22,7 @@ def evaluate(examples: Iterable[dict], k: int = 5) -> dict[str, float | int]:
 
     examples = list(examples)
     recalls: list[float] = []
+    precisions: list[float] = []
     reciprocal_ranks: list[float] = []
 
     for example in examples:
@@ -35,9 +36,21 @@ def evaluate(examples: Iterable[dict], k: int = 5) -> dict[str, float | int]:
             raise ValueError("Each evaluation example needs relevant_sources")
 
         results = search_enterprise_knowledge(query, limit=k)
-        ranked_sources = [str(result.get("source", "")) for result in results[:k]]
+        # Retrieval returns chunks, but these metrics evaluate source documents.
+        # De-duplicate sources while preserving their first rank so multiple
+        # chunks from one document do not artificially inflate precision.
+        ranked_sources = list(
+            dict.fromkeys(
+                str(result.get("source", ""))
+                for result in results[:k]
+                if result.get("source")
+            )
+        )
         retrieved_relevant = relevant_sources.intersection(ranked_sources)
         recalls.append(len(retrieved_relevant) / len(relevant_sources))
+        precisions.append(
+            len(retrieved_relevant) / len(ranked_sources) if ranked_sources else 0.0
+        )
 
         rank = next(
             (
@@ -53,5 +66,6 @@ def evaluate(examples: Iterable[dict], k: int = 5) -> dict[str, float | int]:
     return {
         "examples": count,
         f"recall@{k}": sum(recalls) / count if count else 0.0,
+        f"precision@{k}": sum(precisions) / count if count else 0.0,
         f"mrr@{k}": sum(reciprocal_ranks) / count if count else 0.0,
     }

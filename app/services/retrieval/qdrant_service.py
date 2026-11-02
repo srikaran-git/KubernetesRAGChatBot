@@ -22,6 +22,7 @@ def format_points(points) -> list[dict]:
         payload = point.payload or {}
         results.append(
             {
+                "point_id": str(point.id),
                 "content": payload.get("text", ""),
                 "source": payload.get("source", "Unknown"),
                 "source_type": payload.get("source_type", "general"),

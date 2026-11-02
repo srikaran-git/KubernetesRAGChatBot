@@ -1,6 +1,8 @@
 import time
 import logfire
 from flashrank import Ranker, RerankRequest
+import inspect
+print(inspect.signature(Ranker.__init__))
 
 # Lazy initialization - Ranker is loaded on first use to ensure logfire.configure() has run
 ranker = None
@@ -16,7 +18,7 @@ def get_ranker() -> Ranker:
         logfire.info("🧠 Initializing FlashRank Model (TinyBERT) locally...")
         try:
             # We use a specific cache directory to avoid permission issues in production
-            ranker = Ranker(cache_dir="/tmp/flashrank")
+            ranker =  Ranker(model_name="ms-marco-MiniLM-L-12-v2", max_length=512, cache_dir="/tmp/flashrank")
         except Exception:
             ranker = Ranker()
     return ranker

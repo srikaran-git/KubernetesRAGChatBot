@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from app.services.retrieval.hybrid_index import ensure_hybrid_collection, index_chunks
@@ -18,6 +19,9 @@ def test_ensure_collection_creates_named_dense_and_sparse_vectors():
 def test_existing_collection_is_not_recreated():
     client = MagicMock()
     client.collection_exists.return_value = True
+    client.get_collection.return_value.config.params.vectors = {
+        "dense": SimpleNamespace(size=3)
+    }
 
     ensure_hybrid_collection(client, "test_hybrid", dense_dim=3)
 
