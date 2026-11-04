@@ -3,6 +3,9 @@
 # so that spans from all modules are captured from the start.
 # ============================================================
 import logfire
+from contextlib import asynccontextmanager
+from typing import Optional
+
 from app.config import settings
 
 
@@ -14,16 +17,17 @@ from app.agent.graph import rag_agent
 from app.guardrails import initialize_rails, guard
 
 from pydantic import BaseModel, Field
-from typing import Optional
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Initialize application-wide services before accepting requests."""
+    initialize_rails()
+    yield
 
 
 # Initialize FastAPI
-app = FastAPI(title="Enterprise Agentic RAG API")
-
-
-@app.on_event("startup")
-def startup_event():
-    initialize_rails()
+app = FastAPI(title="Enterprise Agentic RAG API", lifespan=lifespan)
 
 class QueryRequest(BaseModel):
     q: str = Field(min_length=1, max_length=12_000)
